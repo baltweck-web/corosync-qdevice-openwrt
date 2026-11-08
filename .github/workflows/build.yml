@@ -117,8 +117,8 @@ jobs:
           wget -q "${BASE_URL}/${SDK_FILE}" -O "$SDK_FILE"
 
           tar -xf "$SDK_FILE"
-          mv openwrt-sdk-* sdk
           rm -f "$SDK_FILE"
+          mv openwrt-sdk-* sdk
 
       - name: Populate Packages & Configure Target
         run: |
