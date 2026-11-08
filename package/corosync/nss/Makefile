@@ -32,9 +32,16 @@ ifeq ($(ARCH),x86_64)
   NSS_CPU_ARCH:=x86_64
   NSS_USE_64:=1
 endif
+# 32-bit ARM (e.g. ipq40xx, arm_cortex-a7): USE_64 must stay unset
+ifeq ($(ARCH),arm)
+  NSS_CPU_ARCH:=arm
+  NSS_USE_64:=
+endif
 ifeq ($(NSS_CPU_ARCH),)
   NSS_CPU_ARCH:=$(ARCH)
-  NSS_USE_64:=1
+  ifeq ($(CONFIG_ARCH_64BIT),y)
+    NSS_USE_64:=1
+  endif
 endif
 
 define Build/Configure

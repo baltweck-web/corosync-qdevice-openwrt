@@ -11,9 +11,11 @@ cp -r /build/package/* "${SDK_DIR}/package/"
 cd "${SDK_DIR}"
 
 echo "=== Configuring OpenWrt Targets & Packages ==="
-cat << 'EOF' > .config
-CONFIG_TARGET_armsr=y
-CONFIG_TARGET_armsr_armv8=y
+TARGET="${TARGET:-ipq40xx}"
+SUBTARGET="${SUBTARGET:-generic}"
+cat << EOF > .config
+CONFIG_TARGET_${TARGET}=y
+CONFIG_TARGET_${TARGET}_${SUBTARGET}=y
 CONFIG_PACKAGE_libnspr=m
 CONFIG_PACKAGE_libnss=m
 CONFIG_PACKAGE_corosync-qnetd=m
@@ -34,8 +36,9 @@ echo "=== Step 3/3: Building corosync-qnetd 3.0.4 ==="
 make package/corosync/corosync-qnetd/compile V=s -j${NPROC}
 
 echo "=== Collecting Compiled Packages ==="
-rm -f "${OUTPUT_DIR}"/*.ipk
-find bin/packages -name "*.ipk" -exec cp {} "${OUTPUT_DIR}/" \;
+rm -f "${OUTPUT_DIR}"/*.ipk "${OUTPUT_DIR}"/*.apk
+# OpenWrt <= 24.10 produces .ipk (opkg); 25.12+ produces .apk (apk)
+find bin/packages \( -name "*.ipk" -o -name "*.apk" \) -exec cp {} "${OUTPUT_DIR}/" \;
 
 # Repack ipks for GL.iNet if TARGET_ARCH_OVERRIDE is provided
 if [ -n "${TARGET_ARCH_OVERRIDE}" ]; then
@@ -63,7 +66,7 @@ if [ -n "${TARGET_ARCH_OVERRIDE}" ]; then
 fi
 
 cd "${OUTPUT_DIR}"
-sha256sum *.ipk > SHA256SUMS.txt 2>/dev/null || true
+find . -maxdepth 1 \( -name '*.ipk' -o -name '*.apk' \) | sort | xargs -r sha256sum > SHA256SUMS.txt
 
 echo "=== Build Complete! Packages ready in ${OUTPUT_DIR}: ==="
 ls -lh "${OUTPUT_DIR}"
